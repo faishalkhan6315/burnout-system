@@ -9,52 +9,181 @@ import { CheckCircle2 } from "lucide-react";
 const Survey = () => {
   const { toast } = useToast();
   const [responses, setResponses] = useState({
-    stress: [5],
-    sleep: [5],
-    motivation: [5],
-    overwhelmed: [5],
-    support: [5],
+    stress_week: [5],
+    anxiety_frequency: [5],
+    sleep_quality: [5],
+    depression_frequency: [5],
+    self_esteem: [5],
+    physical_fatigue: [5],
+    headache_frequency: [5],
+    study_load: [5],
+    academic_satisfaction: [5],
+    career_worry: [5],
+    deadline_pressure: [5],
+    focus_difficulty: [5],
+    social_support: [5],
+    peer_pressure: [5],
+    teacher_comfort: [5],
+    bullying_experience: [5],
+    environment_peace: [5],
+    class_activity: [5],
+    resource_usage: [5],
+    hobby_time: [5],
   });
 
   const questions = [
     {
-      id: "stress",
+      id: "stress_week",
       question: "How stressed have you felt this week?",
       lowLabel: "Not at all",
       highLabel: "Extremely",
     },
     {
-      id: "sleep",
+      id: "anxiety_frequency",
+      question: "How often do you feel anxious or nervous?",
+      lowLabel: "Never",
+      highLabel: "Always",
+    },
+    {
+      id: "sleep_quality",
       question: "How would you rate your sleep quality?",
       lowLabel: "Very poor",
       highLabel: "Excellent",
     },
     {
-      id: "motivation",
-      question: "How motivated have you felt?",
-      lowLabel: "Not motivated",
-      highLabel: "Very motivated",
+      id: "depression_frequency",
+      question: "How often do you feel down or depressed?",
+      lowLabel: "Never",
+      highLabel: "Always",
     },
     {
-      id: "overwhelmed",
-      question: "How overwhelmed do you feel by your workload?",
+      id: "self_esteem",
+      question: "How satisfied are you with yourself? (Self-Esteem)",
       lowLabel: "Not at all",
-      highLabel: "Completely",
+      highLabel: "Very satisfied",
     },
     {
-      id: "support",
-      question: "How supported do you feel?",
+      id: "physical_fatigue",
+      question: "How physically tired do you feel right now?",
+      lowLabel: "Not tired",
+      highLabel: "Exhausted",
+    },
+    {
+      id: "headache_frequency",
+      question: "How often do you get headaches?",
+      lowLabel: "Never",
+      highLabel: "Often",
+    },
+    {
+      id: "study_load",
+      question: "How heavy is your study load right now?",
+      lowLabel: "Light",
+      highLabel: "Very heavy",
+    },
+    {
+      id: "academic_satisfaction",
+      question: "How satisfied are you with your grades/GPA?",
+      lowLabel: "Dissatisfied",
+      highLabel: "Satisfied",
+    },
+    {
+      id: "career_worry",
+      question: "How worried are you about your future career?",
+      lowLabel: "Not worried",
+      highLabel: "Very worried",
+    },
+    {
+      id: "deadline_pressure",
+      question: "How much pressure do you feel from deadlines?",
+      lowLabel: "None",
+      highLabel: "Extreme",
+    },
+    {
+      id: "focus_difficulty",
+      question: "How hard is it for you to focus in class?",
+      lowLabel: "Easy",
+      highLabel: "Very hard",
+    },
+    {
+      id: "social_support",
+      question: "Do you feel supported by family and friends?",
       lowLabel: "Not supported",
       highLabel: "Very supported",
     },
+    {
+      id: "peer_pressure",
+      question: "How much peer pressure do you feel?",
+      lowLabel: "None",
+      highLabel: "A lot",
+    },
+    {
+      id: "teacher_comfort",
+      question: "How comfortable are you with your teachers?",
+      lowLabel: "Uncomfortable",
+      highLabel: "Very comfortable",
+    },
+    {
+      id: "bullying_experience",
+      question: "Have you experienced bullying recently?",
+      lowLabel: "Never",
+      highLabel: "Frequently",
+    },
+    {
+      id: "environment_peace",
+      question: "How peaceful is your living/study environment?",
+      lowLabel: "Chaotic",
+      highLabel: "Very peaceful",
+    },
+    {
+      id: "class_activity",
+      question: "How active are you in class discussions?",
+      lowLabel: "Passive",
+      highLabel: "Very active",
+    },
+    {
+      id: "resource_usage",
+      question: "How often do you check course resources online?",
+      lowLabel: "Never",
+      highLabel: "Daily",
+    },
+    {
+      id: "hobby_time",
+      question: "How much time do you spend on hobbies/sports?",
+      lowLabel: "None",
+      highLabel: "A lot",
+    },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Check-in submitted!",
-      description: "Your responses help us provide better predictions and support.",
-    });
+    try {
+      const response = await fetch('http://localhost:5001/submit-survey', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...responses,
+          user_id: "STU_123",
+          user_name: "Demo User"
+        }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Check-in submitted!",
+          description: "Your responses help us provide better predictions and support.",
+        });
+      } else {
+        throw new Error('Failed to submit survey');
+      }
+    } catch (error) {
+      toast({
+        title: "Submission failed",
+        description: "There was an error saving your responses. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSliderChange = (id: string, value: number[]) => {
@@ -82,7 +211,7 @@ const Survey = () => {
                     </span>
                     <Label className="text-lg font-medium pt-1">{q.question}</Label>
                   </div>
-                  
+
                   <div className="pl-11 space-y-3">
                     <Slider
                       value={responses[q.id as keyof typeof responses]}
@@ -100,7 +229,7 @@ const Survey = () => {
                       <span>{q.highLabel}</span>
                     </div>
                   </div>
-                  
+
                   {idx < questions.length - 1 && <div className="border-t border-border mt-6" />}
                 </div>
               ))}
@@ -121,7 +250,7 @@ const Survey = () => {
         <Card className="mt-8 p-6 bg-secondary/20 border-secondary">
           <h3 className="font-semibold mb-2">💡 Why these questions?</h3>
           <p className="text-sm text-muted-foreground">
-            These questions help our AI model understand your current wellbeing state. 
+            These questions help our AI model understand your current wellbeing state.
             Regular check-ins improve prediction accuracy and help identify patterns in your stress levels.
           </p>
         </Card>

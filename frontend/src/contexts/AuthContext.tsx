@@ -1,6 +1,14 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import {
+  login as loginAPI,
+  register as registerAPI,
+  getCurrentUser,
+  logout as logoutAPI,
+  getToken,
+} from "@/lib/api";
 
 interface User {
+  id: string;
   email: string;
   name?: string;
 }
@@ -8,8 +16,8 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  signup: (name: string, email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
@@ -19,7 +27,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
@@ -34,67 +42,80 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already authenticated on app load
-    const checkAuth = () => {
-      const isAuth = localStorage.getItem('isAuthenticated') === 'true';
-      const userEmail = localStorage.getItem('userEmail');
-      const userName = localStorage.getItem('userName');
+    const initializeAuth = async () => {
+      const token = getToken();
 
-      if (isAuth && userEmail) {
-        setUser({
-          email: userEmail,
-          name: userName || undefined,
-        });
-        setIsAuthenticated(true);
+      if (!token) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      try {
+        const response = await getCurrentUser();
+        if (response.success && response.data.user) {
+          setUser({
+            id: response.data.user.id,
+            email: response.data.user.email,
+            name: response.data.user.name,
+          });
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+        logoutAPI();
+      } finally {
+        setLoading(false);
+      }
     };
 
-    checkAuth();
+    initializeAuth();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const handleAuthSuccess = (userData: { id: string; email: string; name?: string }) => {
+    setUser({
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
+    });
+    setIsAuthenticated(true);
+  };
+
+  const login = async (email: string, password: string) => {
     try {
-      // Mock API call - in real app, this would call your backend
-      if (email && password) {
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('userEmail', email);
-        
-        setUser({ email });
-        setIsAuthenticated(true);
-        return true;
+      const response = await loginAPI({ email, password });
+      if (response.success && response.data.user) {
+        handleAuthSuccess(response.data.user);
+        return;
       }
-      return false;
+      throw new Error(response.message || "Login failed");
     } catch (error) {
-      console.error('Login error:', error);
-      return false;
+      console.error("Login error:", error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("Login failed");
     }
   };
 
-  const signup = async (name: string, email: string, password: string): Promise<boolean> => {
+  const signup = async (name: string, email: string, password: string) => {
     try {
-      // Mock API call - in real app, this would call your backend
-      if (name && email && password) {
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('userEmail', email);
-        localStorage.setItem('userName', name);
-        
-        setUser({ email, name });
-        setIsAuthenticated(true);
-        return true;
+      const response = await registerAPI({ name, email, password });
+      if (response.success && response.data.user) {
+        handleAuthSuccess(response.data.user);
+        return;
       }
-      return false;
+      throw new Error(response.message || "Signup failed");
     } catch (error) {
-      console.error('Signup error:', error);
-      return false;
+      console.error("Signup error:", error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("Signup failed");
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userName');
-    
+    logoutAPI();
     setUser(null);
     setIsAuthenticated(false);
   };
@@ -108,9 +129,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

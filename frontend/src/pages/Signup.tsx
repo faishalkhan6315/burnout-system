@@ -57,25 +57,17 @@ const Signup = () => {
     setIsLoading(true);
     
     try {
-      const success = await signup(formData.name, formData.email, formData.password);
+      await signup(formData.name, formData.email, formData.password);
       
-      if (success) {
-        toast({
-          title: "Account created successfully!",
-          description: "Welcome to the burnout prevention system!",
-        });
-        navigate("/dashboard");
-      } else {
-        toast({
-          title: "Signup failed",
-          description: "Something went wrong. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+      toast({
+        title: "Account created successfully!",
+        description: "Welcome to the burnout prevention system!",
+      });
+      navigate("/dashboard");
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Something went wrong. Please try again.",
+        description: error?.message || "Something went wrong. Please try again.",
         variant: "destructive",
       });
     } finally {

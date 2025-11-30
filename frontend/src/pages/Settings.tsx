@@ -3,10 +3,12 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/hooks/useTheme";
 import { Bell, Moon, Mail, Shield, Trash2 } from "lucide-react";
 
 const Settings = () => {
   const { toast } = useToast();
+  const { isDarkMode, setDarkMode } = useTheme();
 
   const handleSave = () => {
     toast({
@@ -83,7 +85,11 @@ const Settings = () => {
                   <Label className="text-base">Dark Mode</Label>
                   <p className="text-sm text-muted-foreground">Use dark theme for reduced eye strain</p>
                 </div>
-                <Switch />
+                <Switch
+                  checked={isDarkMode}
+                  onCheckedChange={setDarkMode}
+                  aria-label="Toggle dark mode"
+                />
               </div>
             </div>
           </Card>

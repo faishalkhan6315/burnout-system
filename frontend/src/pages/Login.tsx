@@ -35,25 +35,17 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      const success = await login(formData.email, formData.password);
+      await login(formData.email, formData.password);
       
-      if (success) {
-        toast({
-          title: "Login successful!",
-          description: "Welcome back to your wellness dashboard.",
-        });
-        navigate("/dashboard");
-      } else {
-        toast({
-          title: "Login failed",
-          description: "Invalid email or password",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+      toast({
+        title: "Login successful!",
+        description: "Welcome back to your wellness dashboard.",
+      });
+      navigate("/dashboard");
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Something went wrong. Please try again.",
+        description: error?.message || "Something went wrong. Please try again.",
         variant: "destructive",
       });
     } finally {
